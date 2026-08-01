@@ -48,15 +48,15 @@ raw_yaml_data = string.gsub(raw_yaml_data, "CarrierFrequencyTableValues", "Table
 --L3P3Alt1Width -> PulseWidth --saw this on the patchnotes for 1.9.1.0
 raw_yaml_data = string.gsub(raw_yaml_data, "L3P3Alt1Width", "PulseWidth")
 
-function findAndRemoveEntry(haystack, needle, start) --removes something found in haystack, runs literally
+function findAndRemoveEntry(haystack, needle, start, replacement, max_index) --removes something found in haystack, runs literally
     local found = string.find(haystack, needle, start, true)
     --we know where it is, search backwards and forwards for newlines to remove this line
-    if found then 
+    if found and Check(max_index, found < (max_index or 0), true) then 
         local reversed = string.reverse(string.sub(haystack, 1, found))
         local firstNL = #reversed - string.find(reversed, "\n", 1, true)
         local secondNL = string.find(haystack, "\n", found, true)
 
-        haystack = string.sub(haystack, 1, firstNL) .. "" .. string.sub(haystack, secondNL, #haystack)
+        haystack = string.sub(haystack, 1, firstNL) .. (replacement or "") .. string.sub(haystack, secondNL, #haystack)
     end
 
     return haystack
@@ -89,6 +89,25 @@ while PulseMode do
 
     PulseMode = string.find(raw_yaml_data, "PulseMode", PulseMode + 1, true)
 end
+
+
+--small fix for certain files: out-of-range frequencies in ModulationIndex maps (the full key path is ControlFrequencyFrom->Amplitude->Default, and Default: is only used in this context)
+local Default = string.find(raw_yaml_data, "Default:", 1, true)
+while Default do
+    --count indents, and insert required data
+    local first_newline = string.find(raw_yaml_data, "\n", Default, true)
+    local second_newline = string.find(raw_yaml_data, "\n", first_newline + 1, true)
+    local line = string.sub(raw_yaml_data, first_newline + 1, second_newline - 1)
+    local spaces = count_yaml_spaces(line)
+
+
+    --fix startfrequency in Default modulation index contexts
+    raw_yaml_data = findAndRemoveEntry(raw_yaml_data, "StartFrequency: -1", Default, string.rep("  ", spaces).."StartFrequency: 0", string.find(raw_yaml_data, "StartFrequency: ", Default, true) + 5)
+
+
+    Default = string.find(raw_yaml_data, "Default:", Default + 1, true)
+end
+
 
 --[[find key CarrierFrequencyTableValues: and if there's no entries, change contents to [], also replace the key with Table:
 local CarrierFrequencyTableValues = string.find(raw_yaml_data, "CarrierFrequencyTableValues", 1, true)
