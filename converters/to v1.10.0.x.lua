@@ -91,7 +91,7 @@ while PulseMode do
 end
 
 
---small fix for certain files: out-of-range frequencies in ModulationIndex maps (the full key path is ControlFrequencyFrom->Amplitude->Default, and Default: is only used in this context)
+--[[small fix for certain files: out-of-range frequencies in ModulationIndex maps (the full key path is ControlFrequencyFrom->Amplitude->Default, and Default: is only used in this context)
 local Default = string.find(raw_yaml_data, "Default:", 1, true)
 while Default do
     --count indents, and insert required data
@@ -107,7 +107,7 @@ while Default do
 
     Default = string.find(raw_yaml_data, "Default:", Default + 1, true)
 end
-
+]]
 
 --[[find key CarrierFrequencyTableValues: and if there's no entries, change contents to [], also replace the key with Table:
 local CarrierFrequencyTableValues = string.find(raw_yaml_data, "CarrierFrequencyTableValues", 1, true)
