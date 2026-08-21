@@ -70,7 +70,11 @@ function love.filedropped(droppedfile)
     droppedfile:close()
 
     if not raw_yaml_data then 
-        LogString("Error loading file!", errorcolor)
+        LogString("No conversion done to file; error loading file!", errorcolor)
+        return
+    end
+    if not ext == ".yaml" then 
+        LogString("No conversion done to file; not a YAML file.", errorcolor)
         return
     end
 
@@ -78,21 +82,21 @@ function love.filedropped(droppedfile)
     local converter = available_converters[converter_selected]
     converter, err = loadstring(file.read("converters/"..converter..".lua"))
     if err then 
-        LogString("Error while loading converter! "..err, errorcolor)
+        LogString("No conversion done to file; error while loading converter! "..err, errorcolor)
         return
     end
     local new_filedata = converter(raw_yaml_data)
 
     --resolve new pathname
     local yaml_path = string.sub(filepath, 1, #filepath - #filename) --strip path to original file
-    yaml_path = yaml_path .. fileprefix ..filename
+    yaml_path = yaml_path .. fileprefix .. filename
 
     --writing to new file
     local writing_file,err = file.openNativeFile(yaml_path,"w")
-    if err then LogString("Error creating file \""..yaml_path.."\"! "..tostring(err), errorcolor) return end
+    if err then LogString("No conversion done to file; error creating file \""..yaml_path.."\"! "..tostring(err), errorcolor) return end
     writing_file:write(new_filedata)
     writing_file:close()
-    LogString("Successful! written to \""..fileprefix ..filename.."\"!", successcolor)
+    LogString("Done conversion! Saved to \"".. fileprefix .. filename .."\"!", successcolor)
 end
 
 --text colors
